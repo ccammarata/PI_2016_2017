@@ -7,7 +7,7 @@ library(ggplot2)
 library(car)
 library(Rmisc)
 library(gmodels)
-library("wesanderson", lib.loc="/Library/Frameworks/R.framework/Versions/3.2/Resources/library")
+library(wesanderson)
 
 sessList <- list(27, 28, 29, 30, 31)#list session nubmers here
 ratList <- list(25,28,35,36,46,49,50,53,57,63,64)#list rat number here
@@ -45,13 +45,10 @@ for (sessNum in sessList){
   }
 }
 
-
 #prepare wide and long form data frames
 finalSummaryW <- data.frame(summary)
 finalSummaryW$id <- finalSummaryW$rat
 finalSummaryW$condition <- ifelse(is.element(finalSummaryW$ratID, sapGroup) ,'sap','control')
-
-
 z = rowsNeeded*3 
 finalSummaryL <- reshape(finalSummaryW, varying = c('AB_acc', 'AC_acc', 'DE_acc'), v.names="accuracy",
 timevar='trialType',times=c('AB', 'CA', 'DE'), new.row.names=1:z, direction = 'long')
