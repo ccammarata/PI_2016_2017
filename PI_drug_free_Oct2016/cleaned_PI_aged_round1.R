@@ -1,5 +1,4 @@
 options(contrasts=c("contr.sum", "contr.poly"))
-setwd("~/Documents/GitHub/PI_2016_2017/PI_drug_free_Oct2016")
 library(foreign)
 library(psych)
 library(reshape2)
@@ -9,10 +8,11 @@ library(ez)
 library(Rmisc)
 library(gmodels)
 library(wesanderson)
+library(afex)
 
 # for AB acquisition
 sessList <- list(23,24,25)#list session nubmers here
-ratList <- list(25,35,46,49,53,57)#list rat number here
+ratList <- list(25,35,46,49,53,57,28,36,50,63,64)#list rat number here
 x <- length(sessList)
 y <- length(ratList)
 rowsNeeded <- (x*y)
@@ -42,9 +42,9 @@ for (sessNum in sessList){
 ABsummary <- data.frame(ABsummary)
 ABsummary$ratID <- as.factor(ABsummary$ratID)
 ABsummary$session <- as.factor(ABsummary$session)
-ABsummary$condition <- ifelse(is.element(ABsummary$ratID, sapGroup) ,'sap','control')
+#ABsummary$condition <- ifelse(is.element(ABsummary$ratID, sapGroup) ,'sap','control')
 
-ABsummaryTable <- aggregate(accuracy~session+condition, data=ABsummary, FUN=(mean))
+ABsummaryTable <- aggregate(accuracy~session, data=ABsummary, FUN=(mean))
 tempTable <- aggregate(accuracy~session, data=ABsummary, FUN=(sd))
 ABsummaryTable<- as.data.frame(ABsummaryTable)
 ABsummaryTable$sd <- tempTable$accuracy*100
@@ -55,7 +55,7 @@ ABsummaryTable$accuracy <- ABsummaryTable$accuracy * 100
 
 #for full task
 sessList <- list(27, 28, 29, 30)#list session nubmers here
-ratList <- list(25,35,46,49,53,57)#list rat number here
+ratList <- list(25,35,46,49,53,57,28,36,50,63,64)#list rat number here
 x <- length(sessList)
 y <- length(ratList)
 rowsNeeded <- (x*y)
@@ -89,7 +89,7 @@ for (sessNum in sessList){
 
 #prepare wide and long form data frames for full task
 FULLfinalSummaryW <- data.frame(FULLsummary)
-FULLfinalSummaryW$condition <- ifelse(is.element(FULLfinalSummaryW$ratID, sapGroup) ,'sap','control')
+#FULLfinalSummaryW$condition <- ifelse(is.element(FULLfinalSummaryW$ratID, sapGroup) ,'sap','control')
 z = rowsNeeded*3 
 FULLfinalSummaryL <- reshape(FULLfinalSummaryW, varying = c('AB_acc', 'AC_acc', 'DE_acc'), v.names="accuracy",
                          timevar='trialType',times=c('AB', 'CA', 'DE'), new.row.names=1:z, direction = 'long')
@@ -100,8 +100,8 @@ FULLfinalSummaryW$ratID <-as.factor(FULLfinalSummaryW$ratID)
 FULLfinalSummaryW$session <-as.factor(FULLfinalSummaryW$session)
 
 #making summary table for full task
-FULLsummaryTable <- aggregate(accuracy~trialType+session+condition, data=FULLfinalSummaryL, FUN=(mean))
-tempTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(sd))
+FULLsummaryTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(mean))
+tempTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(sd))
 FULLsummaryTable<- as.data.frame(FULLsummaryTable)
 FULLsummaryTable$sd <- tempTable$accuracy*100
 tempTable$accuracy <- tempTable$accuracy/sqrt(y)
@@ -125,9 +125,21 @@ hist(FULLfinalSummaryL$accuracy)
 #accuracy for the full task is normally distributed 
 plot(accuracy~session, data=FULLfinalSummaryL)
 #looks like session didn't ahve much effect
-plot(accuracy~trialType, data=FULLfinalSummaryL)
-#weak but present effect for trial type
+p1= ggplot(data=FULLfinalSummaryL, aes(trialType,accuracy))
+p1+geom_boxplot(aes(fill=trialType)) +
+  coord_cartesian(ylim=c(0,1))+
+  ggtitle("Accuracy by Trial type") +
+  labs(x="Trial Type",y="Accuracy")+
+  scale_fill_manual(values=wes_palette("Cavalcanti"))+
+  guides(fill=guide_legend(title="trial type"))
 
-#inferential tests of full task dataaov1 <- aov_ez("ratID","accuracy",FULLfinalSummaryL,within = c("trialType", "session"))
-#not sure if above will let me check assumptions
-testAOV <- ezANOVA(data=FULLfinalSummaryL, dv=accuracy, wid = ratID,within=c(trialType,session),detailed=TRUE,return_aov = TRUE)
+
+#inferential tests of full task
+qqnorm(FULLfinalSummaryL$accuracy)
+qqline(FULLfinalSummaryL$accuracy) #to check for normality of residuals
+aov1 <- ezANOVA(data=FULLfinalSummaryL, dv=accuracy, wid = ratID,within=c(trialType,session),detailed=TRUE,return_aov = TRUE)
+aov1$`Mauchly's Test for Sphericity` #to quckly check sphericity, which is fine in this case
+#I used ezANOVA to get the sphericity test but I can't figure out how to do post hoc analyses with that output
+aov2 <- aov_ez("ratID","accuracy",data=FULLfinalSummaryL,within = c("trialType","session"))
+summary(aov2)
+lsmeans(aov2, "trialType", contr = "pairwise", adjust = "holm")
