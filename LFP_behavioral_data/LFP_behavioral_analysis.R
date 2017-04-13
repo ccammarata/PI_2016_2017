@@ -11,8 +11,8 @@ library(wesanderson)
 library(afex)
 
 # for AB acquisition
-sessList <- list(23,24,25)#list session nubmers here
-ratList <- list(25,35,46,49,53,57,28,36,50,63,64)#list rat number here
+sessList <- list(1,2,3)#list session nubmers here
+ratList <- list(25,35,57,49,46,53)#list rat number here
 x <- length(sessList)
 y <- length(ratList)
 rowsNeeded <- (x*y)
@@ -27,19 +27,20 @@ colnames(ABsummary)<- c('ratID', 'session', 'accuracy')
 i = 1
 for (sessNum in sessList){
   for (rat in ratList) {
-    filename <- paste("U3_",rat,"_",sessNum,".csv", sep="")
-    criteriaFilename <- paste("U3_CriteriaMet",rat,"_",sessNum,".csv", sep="")
+    filename <- paste("U3_",rat,"_LFP",sessNum,".csv", sep="")
     print(filename)
+    if (file.exists(filename)){
     currentData <- read.csv(filename, header=TRUE, sep="\t")
     currentData$resp2 <- ifelse(currentData$Response == "correct", 1,0)
     currentAB <- subset(currentData, trialType == "AB")
     ABacc <- mean(currentAB$resp2)
-    ABsummary[i,0:3] <- c(rat, sessNum, ABacc)
+    ABsummary[i,0:3] <- c(rat, sessNum, ABacc)}
     i=i+1
     
   }
 }
 ABsummary <- data.frame(ABsummary)
+ABsummary <- na.omit(ABsummary)
 ABsummary$ratID <- as.factor(ABsummary$ratID)
 ABsummary$session <- as.factor(ABsummary$session)
 #ABsummary$condition <- ifelse(is.element(ABsummary$ratID, sapGroup) ,'sap','control')
@@ -54,8 +55,8 @@ ABsummaryTable$accuracy <- ABsummaryTable$accuracy * 100
 
 
 #for full task
-sessList <- list(27, 28, 29, 30)#list session nubmers here
-ratList <- list(25,35,46,49,53,57,28,36,50,63,64)#list rat number here
+sessList <- list(4,5,6,7)#list session nubmers here
+ratList <- list(25,35,57,49,46,53)#list rat number here
 x <- length(sessList)
 y <- length(ratList)
 rowsNeeded <- (x*y)
@@ -70,8 +71,10 @@ colnames(FULLsummary)<- c('ratID', 'session', 'AB_acc', 'AC_acc', 'DE_acc')
 i = 1
 for (sessNum in sessList){
   for (rat in ratList) {
-    filename <- paste("U3_",rat,"_",sessNum,".csv", sep="")
+    filename <- paste("U3_",rat,"_LFP",sessNum,".csv", sep="")
+    criteriaFilename <- paste("U3_CriteriaMet",rat,"_",sessNum,".csv", sep="")
     print(filename)
+    if (file.exists(filename)){
     currentData <- read.csv(filename, header=TRUE, sep="\t")
     currentData$resp2 <- ifelse(currentData$Response == "correct", 1,0)
     currentAB <- subset(currentData, trialType == "AB")
@@ -80,7 +83,7 @@ for (sessNum in sessList){
     DEacc <- mean(currentDE$resp2)
     currentAC <- subset(currentData, trialType == "CA")
     ACacc <- mean(currentAC$resp2)
-    FULLsummary[i,0:5] <- c(rat, sessNum, ABacc, ACacc, DEacc)
+    FULLsummary[i,0:5] <- c(rat, sessNum, ABacc, ACacc, DEacc)}
     i=i+1
     
   }
@@ -88,10 +91,11 @@ for (sessNum in sessList){
 
 #prepare wide and long form data frames for full task
 FULLfinalSummaryW <- data.frame(FULLsummary)
+FULLfinalSummaryW <- na.omit(FULLfinalSummaryW)
 #FULLfinalSummaryW$condition <- ifelse(is.element(FULLfinalSummaryW$ratID, sapGroup) ,'sap','control')
 z = rowsNeeded*3 
 FULLfinalSummaryL <- reshape(FULLfinalSummaryW, varying = c('AB_acc', 'AC_acc', 'DE_acc'), v.names="accuracy",
-                         timevar='trialType',times=c('AB', 'CA', 'DE'), new.row.names=1:z, direction = 'long')
+                             timevar='trialType',times=c('AB', 'CA', 'DE'), new.row.names=1:z, direction = 'long')
 FULLfinalSummaryL$ratID <-as.factor(FULLfinalSummaryL$ratID)
 FULLfinalSummaryL$session <-as.factor(FULLfinalSummaryL$session)
 FULLfinalSummaryL$trialType <- as.factor(FULLfinalSummaryL$trialType)
@@ -124,24 +128,6 @@ hist(FULLfinalSummaryL$accuracy)
 #accuracy for the full task is normally distributed 
 plot(accuracy~session, data=FULLfinalSummaryL)
 #looks like session didn't ahve much effect
-p1= ggplot(data=FULLfinalSummaryL, aes(trialType,accuracy))
-p1+geom_boxplot(aes(fill=trialType)) +
-  coord_cartesian(ylim=c(0,1))+
-  ggtitle("Accuracy by Trial type") +
-  labs(x="Trial Type",y="Accuracy")+
-  scale_fill_manual(values=wes_palette("Cavalcanti"))+
-  guides(fill=guide_legend(title="trial type"))
-
-
-#inferential tests of full task
-qqnorm(FULLfinalSummaryL$accuracy)
-qqline(FULLfinalSummaryL$accuracy) #to check for normality of residuals
-aov1 <- ezANOVA(data=FULLfinalSummaryL, dv=accuracy, wid = ratID,within=c(trialType,session),detailed=TRUE,return_aov = TRUE)
-aov1$`Mauchly's Test for Sphericity` #to quckly check sphericity, which is fine in this case
-#I used ezANOVA to get the sphericity test but I can't figure out how to do post hoc analyses with that output
-aov2 <- aov_ez("ratID","accuracy",data=FULLfinalSummaryL,within = c("trialType","session"))
-summary(aov2)
-lsmeans(aov2, "trialType", contr = "pairwise", adjust = "holm")
 
 ggplot(FULLsummaryTable, aes(x=trialType, y=accuracy, fill=trialType)) + 
   geom_bar(stat="identity", color="black", 
@@ -153,3 +139,15 @@ ggplot(FULLsummaryTable, aes(x=trialType, y=accuracy, fill=trialType)) +
   ggtitle("Accuracy by trial trype")+
   guides(fill=guide_legend(title="trial type")) +
   labs(x="Trial Type",y="Accuracy")
+
+
+
+#inferential tests of full task
+qqnorm(FULLfinalSummaryL$accuracy)
+qqline(FULLfinalSummaryL$accuracy) #to check for normality of residuals
+aov1 <- ezANOVA(data=FULLfinalSummaryL, dv=accuracy, wid = ratID,within=c(trialType),detailed=TRUE,return_aov = TRUE)
+aov1$`Mauchly's Test for Sphericity` #to quckly check sphericity, which is fine in this case
+#I used ezANOVA to get the sphericity test but I can't figure out how to do post hoc analyses with that output
+aov2 <- aov_ez("ratID","accuracy",data=FULLfinalSummaryL,within = c("trialType"))
+summary(aov2) #trial type still just barely significant
+lsmeans(aov2, "trialType", contr = "pairwise", adjust = "holm")

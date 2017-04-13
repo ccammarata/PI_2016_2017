@@ -114,13 +114,13 @@ z = rowsNeeded*3
 fullTaskL <- reshape(fullTaskW, varying = c('AB_acc', 'AC_acc', 'DE_acc'), v.names="accuracy",
                      timevar='trialType',times=c('AB', 'CA', 'DE'), new.row.names=1:z, direction = 'long')
 
-summaryTable <- aggregate(accuracy~trialType, data=fullTaskL, FUN=(mean))
+summaryTable <- aggregate(accuracy~trialType+drug, data=fullTaskL, FUN=(mean))
 tempTable <- aggregate(accuracy~trialType, data=fullTaskL, FUN=(sd))
 summaryTable<- as.data.frame(summaryTable)
-summaryTable$sd <- tempTable$accuracy*100
+summaryTable$sd <- tempTable$accuracy
 tempTable$accuracy <- tempTable$accuracy/sqrt(y)
-summaryTable$se <- tempTable$accuracy*100
-summaryTable$accuracy <- summaryTable$accuracy * 100
+summaryTable$se <- tempTable$accuracy
+summaryTable$accuracy <- summaryTable$accuracy
 
 # analysis if AB acquisition
 hist(AB_acquisitionW$accuracy)
@@ -156,3 +156,14 @@ p2+geom_boxplot(aes(fill=trialType))+facet_grid(drug ~ .)+
   scale_fill_manual(values=wes_palette("Cavalcanti"))+
   guides(fill=guide_legend(title="trial type"))
 
+ggplot(summaryTable, aes(x=trialType, y=accuracy, fill=trialType)) + 
+  geom_bar(stat="identity", color="black", 
+           position=position_dodge()) +
+  facet_wrap(drug ~ .)+
+  coord_cartesian(ylim=c(0,1))+
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2,
+                position=position_dodge(.9)) +
+  scale_fill_manual(values=wes_palette("Royal1"))+
+  ggtitle("Accuracy by trial trype")+
+  guides(fill=guide_legend(title="trial type")) +
+  labs(x="Trial Type",y="Accuracy")
