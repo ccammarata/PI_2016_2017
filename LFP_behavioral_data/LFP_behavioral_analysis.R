@@ -103,8 +103,8 @@ FULLfinalSummaryW$ratID <-as.factor(FULLfinalSummaryW$ratID)
 FULLfinalSummaryW$session <-as.factor(FULLfinalSummaryW$session)
 
 #making summary table for full task
-FULLsummaryTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(mean))
-tempTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(sd))
+FULLsummaryTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(mean))
+tempTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(sd))
 FULLsummaryTable<- as.data.frame(FULLsummaryTable)
 FULLsummaryTable$sd <- tempTable$accuracy
 tempTable$accuracy <- tempTable$accuracy/sqrt(y)
@@ -151,3 +151,10 @@ aov1$`Mauchly's Test for Sphericity` #to quckly check sphericity, which is fine 
 aov2 <- aov_ez("ratID","accuracy",data=FULLfinalSummaryL,within = c("trialType"))
 summary(aov2) #trial type still just barely significant
 lsmeans(aov2, "trialType", contr = "pairwise", adjust = "holm")
+
+ggplot(FULLsummaryTable, aes(x=session,y=accuracy,colour = trialType))+
+  geom_line(aes(group=trialType))+
+  geom_point()+geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se),width=.1,position=position_dodge(.05))+
+  coord_cartesian(ylim=c(.4,.9))+
+  guides(colour=guide_legend(title="trial type"))
+

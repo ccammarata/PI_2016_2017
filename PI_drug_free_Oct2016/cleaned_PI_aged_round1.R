@@ -54,7 +54,7 @@ ABsummaryTable$accuracy <- ABsummaryTable$accuracy * 100
 
 
 #for full task
-sessList <- list(27, 28, 29, 30)#list session nubmers here
+sessList <- list(27, 28, 29, 30,31)#list session nubmers here
 ratList <- list(25,35,46,49,53,57,28,36,50,63,64)#list rat number here
 x <- length(sessList)
 y <- length(ratList)
@@ -99,8 +99,8 @@ FULLfinalSummaryW$ratID <-as.factor(FULLfinalSummaryW$ratID)
 FULLfinalSummaryW$session <-as.factor(FULLfinalSummaryW$session)
 
 #making summary table for full task
-FULLsummaryTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(mean))
-tempTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(sd))
+FULLsummaryTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(mean))
+tempTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(sd))
 FULLsummaryTable<- as.data.frame(FULLsummaryTable)
 FULLsummaryTable$sd <- tempTable$accuracy
 tempTable$accuracy <- tempTable$accuracy/sqrt(y)
@@ -126,7 +126,7 @@ plot(accuracy~session, data=FULLfinalSummaryL)
 #looks like session didn't ahve much effect
 p1= ggplot(data=FULLfinalSummaryL, aes(trialType,accuracy))
 p1+geom_boxplot(aes(fill=trialType)) +
-  coord_cartesian(ylim=c(0,1))+
+  coord_cartesian(ylim=c(0,.8))+
   ggtitle("Accuracy by Trial type") +
   labs(x="Trial Type",y="Accuracy")+
   scale_fill_manual(values=wes_palette("Cavalcanti"))+
@@ -146,10 +146,26 @@ lsmeans(aov2, "trialType", contr = "pairwise", adjust = "holm")
 ggplot(FULLsummaryTable, aes(x=trialType, y=accuracy, fill=trialType)) + 
   geom_bar(stat="identity", color="black", 
            position=position_dodge()) +
-  coord_cartesian(ylim=c(0,1))+
+  coord_cartesian(ylim=c(0,.8))+
   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2,
                 position=position_dodge(.9)) +
   scale_fill_manual(values=wes_palette("Royal1"))+
   ggtitle("Accuracy by trial trype")+
   guides(fill=guide_legend(title="trial type")) +
   labs(x="Trial Type",y="Accuracy")
+
+subSummaryTable <-subset(FULLsummaryTable, trialType != 'AB')
+
+ggplot(subSummaryTable, aes(x=session,y=accuracy,colour = trialType))+
+  geom_line(aes(group=trialType))+geom_point()+
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se),width=.05)
+
+ggplot(FULLsummaryTable, aes(x=session,y=accuracy,colour = trialType))+
+  geom_line(aes(group=trialType))+
+  geom_point()+geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se),width=.1,position=position_dodge(.05))+
+  coord_cartesian(ylim=c(.4,.8))+
+  guides(colour=guide_legend(title="trial type"))
+  
+
+
+
