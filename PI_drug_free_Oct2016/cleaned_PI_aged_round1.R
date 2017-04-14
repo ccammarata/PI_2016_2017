@@ -173,7 +173,7 @@ ggplot(FULLsummaryTable, aes(x=session,y=accuracy,colour = trialType))+
   geom_point()+geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se),width=.1,position=position_dodge(.05))+
   coord_cartesian(ylim=c(.4,.8))+
   guides(colour=guide_legend(title="trial type"))+
-  scale_color_manual(values=wes_palette("Royal1"))+ theme(panel.background = element_rect(fill = 'slategray1', colour = 'black'))
+  scale_color_manual(values=wes_palette("Royal1"))
   
 
 
