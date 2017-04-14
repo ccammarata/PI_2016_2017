@@ -115,7 +115,7 @@ fullTaskL <- reshape(fullTaskW, varying = c('AB_acc', 'AC_acc', 'DE_acc'), v.nam
                      timevar='trialType',times=c('AB', 'CA', 'DE'), new.row.names=1:z, direction = 'long')
 
 summaryTable <- aggregate(accuracy~trialType+drug, data=fullTaskL, FUN=(mean))
-tempTable <- aggregate(accuracy~trialType, data=fullTaskL, FUN=(sd))
+tempTable <- aggregate(accuracy~trialType+drug, data=fullTaskL, FUN=(sd))
 summaryTable<- as.data.frame(summaryTable)
 summaryTable$sd <- tempTable$accuracy
 tempTable$accuracy <- tempTable$accuracy/sqrt(y)
@@ -159,8 +159,8 @@ p2+geom_boxplot(aes(fill=trialType))+facet_grid(drug ~ .)+
 ggplot(summaryTable, aes(x=trialType, y=accuracy, fill=trialType)) + 
   geom_bar(stat="identity", color="black", 
            position=position_dodge()) +
-  facet_wrap(drug ~ .)+
-  coord_cartesian(ylim=c(0,1))+
+  facet_grid(drug ~ .)+
+  coord_cartesian(ylim=c(0,.8))+
   geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2,
                 position=position_dodge(.9)) +
   scale_fill_manual(values=wes_palette("Royal1"))+

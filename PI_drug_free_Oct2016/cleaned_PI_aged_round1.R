@@ -99,8 +99,8 @@ FULLfinalSummaryW$ratID <-as.factor(FULLfinalSummaryW$ratID)
 FULLfinalSummaryW$session <-as.factor(FULLfinalSummaryW$session)
 
 #making summary table for full task
-FULLsummaryTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(mean))
-tempTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(sd))
+FULLsummaryTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(mean))
+tempTable <- aggregate(accuracy~trialType, data=FULLfinalSummaryL, FUN=(sd))
 FULLsummaryTable<- as.data.frame(FULLsummaryTable)
 FULLsummaryTable$sd <- tempTable$accuracy
 tempTable$accuracy <- tempTable$accuracy/sqrt(y)
@@ -154,6 +154,14 @@ ggplot(FULLsummaryTable, aes(x=trialType, y=accuracy, fill=trialType)) +
   guides(fill=guide_legend(title="trial type")) +
   labs(x="Trial Type",y="Accuracy")
 
+FULLsummaryTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(mean))
+tempTable <- aggregate(accuracy~trialType+session, data=FULLfinalSummaryL, FUN=(sd))
+FULLsummaryTable<- as.data.frame(FULLsummaryTable)
+FULLsummaryTable$sd <- tempTable$accuracy
+tempTable$accuracy <- tempTable$accuracy/sqrt(y)
+FULLsummaryTable$se <- tempTable$accuracy
+FULLsummaryTable$accuracy <- FULLsummaryTable$accuracy
+
 subSummaryTable <-subset(FULLsummaryTable, trialType != 'AB')
 
 ggplot(subSummaryTable, aes(x=session,y=accuracy,colour = trialType))+
@@ -164,7 +172,8 @@ ggplot(FULLsummaryTable, aes(x=session,y=accuracy,colour = trialType))+
   geom_line(aes(group=trialType))+
   geom_point()+geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se),width=.1,position=position_dodge(.05))+
   coord_cartesian(ylim=c(.4,.8))+
-  guides(colour=guide_legend(title="trial type"))
+  guides(colour=guide_legend(title="trial type"))+
+  scale_color_manual(values=wes_palette("Royal1"))+ theme(panel.background = element_rect(fill = 'slategray1', colour = 'black'))
   
 
 
