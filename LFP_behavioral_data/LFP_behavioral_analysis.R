@@ -158,3 +158,11 @@ ggplot(FULLsummaryTable, aes(x=session,y=accuracy,colour = trialType))+
   coord_cartesian(ylim=c(.4,.9))+
   guides(colour=guide_legend(title="trial type"))
 
+
+#looking at individual rats
+
+ggplot(FULLfinalSummaryL, aes(x=session,y=accuracy,colour = trialType))+
+  geom_line(aes(group=trialType))+facet_grid(.~ratID)+
+  geom_point()+
+  coord_cartesian(ylim=c(.4,.9))+
+  guides(colour=guide_legend(title="trial type"))
